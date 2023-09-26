@@ -15,18 +15,12 @@ BASE_MODEL_CACHE = "./base-model-cache"
 BASE_MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
 
 
-def parse_args():
-    # get training_config.json from the end user
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--training_config", type=str, required=True)
-    return parser.parse_args()
-
 class Predictor(BasePredictor):
 
-    def setup(self):
-        if not os.path.exists(BASE_MODEL_CACHE):
+    # def setup(self):
+       # if not os.path.exists(BASE_MODEL_CACHE):
             # self.download_weights(BASE_MODEL_ID, BASE_MODEL_CACHE)
-            subprocess.check_call(["python", "script/download_weights.py"])
+            # subprocess.check_call(["python", "script/download_weights.py"])
 
     def download_weights(self, url, dest):
         start = time.time()
@@ -86,48 +80,47 @@ class Predictor(BasePredictor):
         if num_cycles is None or num_cycles == 0:
             raise Exception("num_cycles can't be none or 0.")
         
-        
         # Setup the args
-        args = parse_args()
-
-        args.model = model
-        args.prompt = prompt
-        if class_prompt is not None: args.class_prompt = class_prompt
-        args.seed = seed
-        args.resolution = resolution
-        args.center_crop = center_crop
-        args.train_text_encoder = train_text_encoder
-        args.batch_size = batch_size
-        args.num_steps = num_steps
-        args.checkpointing_steps = checkpointing_steps
-        args.gradient_accumulation = gradient_accumulation
-        args.lr = lr
-        args.scheduler = scheduler
-        args.warmup_steps = warmup_steps
-        args.num_cycles = num_cycles
-        args.use_8bit_adam = use_8bit_adam
-        args.xformers = xformers
-        args.xl = xl
-
+        args = {
+            "model" : model,
+            "prompt" : prompt,
+            "seed" : seed,
+            "resolution" : resolution,
+            "center_crop" : center_crop,
+            "train_text_encoder" : train_text_encoder,
+            "batch_size" : batch_size,
+            "num_steps" : num_steps,
+            "checkpointing_steps" : checkpointing_steps,
+            "gradient_accumulation" : gradient_accumulation,
+            "lr" : lr,
+            "scheduler" : scheduler,
+            "warmup_steps" : warmup_steps,
+            "num_cycles" : num_cycles,
+            "use_8bit_adam" : use_8bit_adam,
+            "xformers" : xformers,
+            "xl" : xl
+        }
+        
+        if class_prompt is not None: args['class_prompt'] = class_prompt
 
         # Unzip the training dataset
         train_data_dir = tempfile.mkdtemp()
         with zipfile.ZipFile(train_data_zip, 'r') as zip_ref:
             zip_ref.extractall(train_data_dir)
 
-        args.image_path = train_data_dir
+        args['image_path'] = train_data_dir
 
         # Setup the parameters
         if mixed_precision == "bf16":
-            args.bf16 = True
+            args['bf16'] = True
         
         if mixed_precision == "fp16":
-            args.fp16 = True
+            args['fp16'] = True
 
         output_dir = Path(tempfile.mkdtemp())
-        if not output_name:
-            output_name = Path(re.sub("[^-a-zA-Z0-9_]", "", train_data_zip.name)).name
-        args.project_name = output_dir
+        #if not output_name:
+            # output_name = Path(re.sub("[^-a-zA-Z0-9_]", "", train_data_zip.name)).name
+        args['project_name'] = "lora_weights"
 
         # OPTIONAL PARAMS
         # Unzip the regularization dataset 
@@ -136,10 +129,10 @@ class Predictor(BasePredictor):
             with zipfile.ZipFile(train_class_data_zip, 'r') as zip_ref:
                 zip_ref.extractall(train_class_data_dir)
 
-            args.class_image_path = train_class_data_dir
+            args['class_image_path'] = train_class_data_dir
 
-        
-        params = DreamBoothTrainingParams(args)
+
+        params = DreamBoothTrainingParams(**args)
         train_dreambooth(params)
     
         return output_dir
