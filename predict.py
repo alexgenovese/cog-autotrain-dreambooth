@@ -4,7 +4,7 @@ import zipfile
 import os
 import time
 import subprocess
-import argparse
+import mimetypes
 import json
 from cog import BasePredictor, Input, Path
 from autotrain.trainers.dreambooth.__main__ import train as train_dreambooth
@@ -13,7 +13,8 @@ from autotrain.trainers.dreambooth.params import DreamBoothTrainingParams
 
 BASE_MODEL_CACHE = "./base-model-cache"
 BASE_MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
-
+TEMP_TRAIN = './temp_training_dataset'
+TEMP_CLASS = './temp_class_dataset'
 
 class Predictor(BasePredictor):
 
@@ -104,11 +105,18 @@ class Predictor(BasePredictor):
         if class_prompt is not None: args['class_prompt'] = class_prompt
 
         # Unzip the training dataset
-        train_data_dir = tempfile.mkdtemp()
-        with zipfile.ZipFile(train_data_zip, 'r') as zip_ref:
-            zip_ref.extractall(train_data_dir)
+        with zipfile.ZipFile(str(train_data_zip), "r") as zip_ref:
+            for zip_info in zip_ref.infolist():
+                if zip_info.filename[-1] == "/" or zip_info.filename.startswith(
+                    "__MACOSX"
+                ):
+                    continue
+                mt = mimetypes.guess_type(zip_info.filename)
+                if mt and mt[0] and mt[0].startswith("image/"):
+                    zip_info.filename = os.path.basename(zip_info.filename)
+                    zip_ref.extract(zip_info, TEMP_TRAIN)
 
-        args['image_path'] = train_data_dir
+        args['image_path'] = TEMP_TRAIN
 
         # Setup the parameters
         if mixed_precision == "bf16":
@@ -117,22 +125,30 @@ class Predictor(BasePredictor):
         if mixed_precision == "fp16":
             args['fp16'] = True
 
-        output_dir = Path(tempfile.mkdtemp())
-        #if not output_name:
-            # output_name = Path(re.sub("[^-a-zA-Z0-9_]", "", train_data_zip.name)).name
-        args['project_name'] = "lora_weights"
+        # output_dir: str = Path('lora_weights')
+        args['project_name'] = 'lora_weights'
 
         # OPTIONAL PARAMS
         # Unzip the regularization dataset 
         if train_class_data_zip is not None:
-            train_class_data_dir = tempfile.mkdtemp()
-            with zipfile.ZipFile(train_class_data_zip, 'r') as zip_ref:
-                zip_ref.extractall(train_class_data_dir)
-
-            args['class_image_path'] = train_class_data_dir
+            with zipfile.ZipFile(str(train_class_data_zip), "r") as zip_ref:
+                for zip_info in zip_ref.infolist():
+                    if zip_info.filename[-1] == "/" or zip_info.filename.startswith(
+                        "__MACOSX"
+                    ):
+                        continue
+                    mt = mimetypes.guess_type(zip_info.filename)
+                    if mt and mt[0] and mt[0].startswith("image/"):
+                        zip_info.filename = os.path.basename(zip_info.filename)
+                        zip_ref.extract(zip_info, TEMP_CLASS)
+            
+            args['class_image_path'] = TEMP_CLASS
 
 
         params = DreamBoothTrainingParams(**args)
         train_dreambooth(params)
+
+        dir_list = os.listdir('lora_weights')
+        print(dir_list)
     
-        return output_dir
+        return Path('lora_weights')
