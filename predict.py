@@ -10,7 +10,7 @@ from cog import BasePredictor, Input, Path
 from autotrain.trainers.dreambooth.__main__ import train as train_dreambooth
 from autotrain.trainers.dreambooth.params import DreamBoothTrainingParams
 
-
+OUTPUT_DIR = './custom_model'
 BASE_MODEL_CACHE = "./base-model-cache"
 BASE_MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
 TEMP_TRAIN = './temp_training_dataset'
@@ -18,9 +18,12 @@ TEMP_CLASS = './temp_class_dataset'
 
 class Predictor(BasePredictor):
 
-    # def setup(self):
-       # if not os.path.exists(BASE_MODEL_CACHE):
-            # self.download_weights(BASE_MODEL_ID, BASE_MODEL_CACHE)
+    def setup(self):
+        print("Started setup")
+        if not os.path.exists(OUTPUT_DIR):
+            print("Creating output folder")
+            os.makedirs(OUTPUT_DIR)
+            # self.\(BASE_MODEL_ID, BASE_MODEL_CACHE)
             # subprocess.check_call(["python", "script/download_weights.py"])
 
     def download_weights(self, url, dest):
@@ -30,6 +33,7 @@ class Predictor(BasePredictor):
         subprocess.check_call(["pqget", "-x", url, dest])
         print("downloading took: ", time.time() - start)
     
+    #@torch.inference_mode()
     def predict(
         self,
         model: str = Input(description="HF base model path", default="stabilityai/stable-diffusion-xl-base-1.0"),
@@ -126,7 +130,7 @@ class Predictor(BasePredictor):
             args['fp16'] = True
 
         # output_dir: str = Path('lora_weights')
-        args['project_name'] = 'lora_weights'
+        args['project_name'] = OUTPUT_DIR
 
         # OPTIONAL PARAMS
         # Unzip the regularization dataset 
@@ -148,7 +152,7 @@ class Predictor(BasePredictor):
         params = DreamBoothTrainingParams(**args)
         train_dreambooth(params)
 
-        dir_list = os.listdir('lora_weights')
+        dir_list = os.listdir(OUTPUT_DIR)
         print(dir_list)
     
-        return Path('lora_weights')
+        return Path(OUTPUT_DIR)
