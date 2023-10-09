@@ -10,7 +10,7 @@ from cog import BasePredictor, Input, Path
 from autotrain.trainers.dreambooth.__main__ import train as train_dreambooth
 from autotrain.trainers.dreambooth.params import DreamBoothTrainingParams
 
-OUTPUT_DIR = './custom_model'
+OUTPUT_DIR = './output_dir/'
 BASE_MODEL_CACHE = "./base-model-cache"
 BASE_MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
 TEMP_TRAIN = './temp_training_dataset'
@@ -149,10 +149,13 @@ class Predictor(BasePredictor):
             args['class_image_path'] = TEMP_CLASS
 
 
+        dir_list = os.listdir(OUTPUT_DIR)
+        print(dir_list)
+    
         params = DreamBoothTrainingParams(**args)
         train_dreambooth(params)
 
         dir_list = os.listdir(OUTPUT_DIR)
-        print(dir_list)
+        print(dir_list)    
     
         return Path(OUTPUT_DIR)
