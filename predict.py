@@ -130,7 +130,11 @@ class Predictor(BasePredictor):
             args['fp16'] = True
 
         # output_dir: str = Path('lora_weights')
-        args['project_name'] = OUTPUT_DIR
+        args['project_name'] = 'project_name'
+
+        if not os.path.exists(OUTPUT_DIR):
+            print(f"------------- Creating output folder {OUTPUT_DIR}")
+            os.makedirs(OUTPUT_DIR)
 
         # OPTIONAL PARAMS
         # Unzip the regularization dataset 
