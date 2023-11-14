@@ -8,6 +8,11 @@ __pycache__/
 .DS_Store
 # C extensions
 *.so
+output_dir/
+input/
+project_name/
+temp_training_dataset/
+venv/
 
 # Distribution / packaging
 .Python

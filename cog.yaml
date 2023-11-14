@@ -40,7 +40,7 @@ build:
 
   run:
     - autotrain setup 
-    - curl -o /usr/local/bin/pget -L "https://github.com/replicate/pget/releases/download/v0.0.1/pget" && chmod +x /usr/local/bin/pget
+    - curl -o /usr/local/bin/pget -L "https://github.com/replicate/pget/releases/download/v0.0.6/pget" && chmod +x /usr/local/bin/pget
     
 predict: "predict.py:Predictor"
 image: "r8.im/alexgenovese/autotrain-dreambooth"
