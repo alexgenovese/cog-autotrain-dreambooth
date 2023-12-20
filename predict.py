@@ -1,12 +1,9 @@
-import re
 import shutil
-import tempfile
 import zipfile
 import os
 import time
 import subprocess
 import mimetypes
-import json
 from cog import BasePredictor, Input, Path
 from autotrain.trainers.dreambooth.__main__ import train as train_dreambooth
 from autotrain.trainers.dreambooth.params import DreamBoothTrainingParams
