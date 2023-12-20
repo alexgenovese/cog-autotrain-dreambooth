@@ -1,4 +1,5 @@
 import re
+import shutil
 import tempfile
 import zipfile
 import os
@@ -131,7 +132,7 @@ class Predictor(BasePredictor):
             args['fp16'] = True
 
         # output_dir: str = Path('lora_weights')
-        args['project_name'] = 'project_name'
+        args['project_name'] = OUTPUT_DIR
 
         if not os.path.exists(OUTPUT_DIR):
             print(f"------------- Creating output folder {OUTPUT_DIR}")
@@ -152,18 +153,18 @@ class Predictor(BasePredictor):
                         zip_ref.extract(zip_info, TEMP_CLASS)
             
             args['class_image_path'] = TEMP_CLASS
-
-
-        dir_list = os.listdir(OUTPUT_DIR)
-        print(dir_list)
+ 
     
         params = DreamBoothTrainingParams(**args)
         train_dreambooth(params)
 
         dir_list = os.listdir(OUTPUT_DIR)
-        print(dir_list)    
+        print(f"After training {dir_list}")
+
+        zip_folder = shutil.make_archive('output', 'zip', OUTPUT_DIR)
+        print(f"Zip folder {zip_folder}")
     
-        return Path(OUTPUT_DIR)
+        return Path( zip_folder )
     
 
     # Only for testing
@@ -172,7 +173,7 @@ class Predictor(BasePredictor):
         model: str = "stabilityai/stable-diffusion-xl-base-1.0",
         prompt: str = "a photo of aisudhca shoes",
         train_data_zip: str = "./input/geox_captions.zip",
-        mixed_precision: str = "fp16",
+        mixed_precision: str = "fp32",
         train_class_data_zip: str = None,
         class_prompt: str = None,
         seed: int = 123456,
@@ -182,7 +183,7 @@ class Predictor(BasePredictor):
         batch_size: int = 1,
         # sample_batch_size: int = Input(default=4, description="Sample batch size"),
         # epochs: int = Input(default=10, description="Number of training epochs"),
-        num_steps: int = 2000,
+        num_steps: int = 1,
         checkpointing_steps: int = 500,
         # resume_from_checkpoint: str = Input(default=None, description="Resume from checkpoint"),
         gradient_accumulation: int = 1,
@@ -258,7 +259,7 @@ class Predictor(BasePredictor):
             args['fp16'] = True
 
         # output_dir: str = Path('lora_weights')
-        args['project_name'] = 'project_name'
+        args['project_name'] = OUTPUT_DIR
 
         if not os.path.exists(OUTPUT_DIR):
             print(f"------------- Creating output folder {OUTPUT_DIR}")
@@ -281,16 +282,16 @@ class Predictor(BasePredictor):
             args['class_image_path'] = TEMP_CLASS
 
 
-        dir_list = os.listdir(OUTPUT_DIR)
-        print(dir_list)
-    
         params = DreamBoothTrainingParams(**args)
         train_dreambooth(params)
 
         dir_list = os.listdir(OUTPUT_DIR)
-        print(dir_list)    
+        print(f"After training {dir_list}")
+
+        zip_folder = shutil.make_archive('output', 'zip', OUTPUT_DIR)
+        print(f"Zip folder {zip_folder}")
     
-        return Path(OUTPUT_DIR)
+        return zip_folder
     
 
 
